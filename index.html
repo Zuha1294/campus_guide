@@ -64,7 +64,7 @@
             lastAcceleration = totalForce;
 
             // Trigger step if movement threshold crossed
-            if (delta > 4.5) { 
+            if (delta > 1.5) { 
                 stepCount++;
                 document.getElementById('step-status').innerText = `Steps Detected: ${stepCount}`;
             }
