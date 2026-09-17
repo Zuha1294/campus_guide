@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Guide Sensor Test</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #f0f2f5; }
+        button { padding: 15px 30px; font-size: 18px; cursor: pointer; border-radius: 8px; border: none; background: #007bff; color: white; font-weight: bold; }
+        .log-box { margin-top: 30px; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 100px; text-align: left; }
+    </style>
+</head>
+<body>
+
+    <h1>Campus Guide Live Sensor Test</h1>
+    <p>Tap the button below to allow the website to use your mobile motion sensors.</p>
+    
+    <button onclick="startIndoorTracking()">Enable Live Tracking</button>
+
+    <div class="log-box">
+        <h3>Live Sensor Data:</h3>
+        <p id="compass-status">Compass Heading: Waiting...</p>
+        <p id="step-status">Steps Detected: 0</p>
+    </div>
+
+    <script>
+        let stepCount = 0;
+
+        async function startIndoorTracking() {
+            // Check if iOS requires sensor permission
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                try {
+                    const permission = await DeviceOrientationEvent.requestPermission();
+                    if (permission === 'granted') {
+                        window.addEventListener('deviceorientationabsolute', handleCompassMove);
+                        window.addEventListener('devicemotion', handleStepDetection);
+                        alert("Sensors connected successfully!");
+                    }
+                } catch (error) {
+                    alert("Permission denied: " + error);
+                }
+            } else {
+                // Standard Android / Desktop Chrome
+                window.addEventListener('deviceorientation', handleCompassMove);
+                window.addEventListener('devicemotion', handleStepDetection);
+                alert("Sensors connected!");
+            }
+        }
+
+        function handleCompassMove(event) {
+            const heading = event.alpha || event.webkitCompassHeading;
+            if (heading) {
+                document.getElementById('compass-status').innerText = `Compass Heading: ${heading.toFixed(1)}°`;
+            }
+        }
+
+        let lastAcceleration = 0;
+        function handleStepDetection(event) {
+            const acc = event.accelerationIncludingGravity;
+            if (!acc) return;
+
+            const totalForce = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
+            const delta = Math.abs(totalForce - lastAcceleration);
+            lastAcceleration = totalForce;
+
+            // Trigger step if movement threshold crossed
+            if (delta > 4.5) { 
+                stepCount++;
+                document.getElementById('step-status').innerText = `Steps Detected: ${stepCount}`;
+            }
+        }
+    </script>
+</body>
+</html>
